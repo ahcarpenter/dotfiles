@@ -39,14 +39,14 @@ in
     initContent = ''
       bindkey '^f' autosuggest-accept
     '';
+    oh-my-zsh = {
+      enable = true;
+      plugins = [ "git" "z" ];
+    };
     shellAliases = {
-      ".." = "cd ..";
-      add = "git add .";
-      push = "git push";
-      pull = "git pull";
       m = "git switch main";
       cc = "claude --dangerously-skip-permissions";
-      ccu = "npx -y quota-axi --tui --provider claude --refresh 60s";
+      co = "codex --full-auto";
     };
   };
 
@@ -74,5 +74,7 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.claude/settings.json";
 
   home.file.".claude/CLAUDE.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+  home.file.".codex/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
 }
