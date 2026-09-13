@@ -39,6 +39,7 @@
     ];
     brews = [
       "herdr"
+      "tailscale"
       "mosh"
       "moshi-hook"
     ];
