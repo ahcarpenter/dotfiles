@@ -17,12 +17,17 @@ in
     lazygit
     neovim
     gh
+    fnm
+    pnpm
     # the font everything renders in
     nerd-fonts.hack
   ];
   fonts.fontconfig.enable = true;
 
-  home.sessionVariables.EDITOR = "nvim";
+  home.sessionVariables = {
+    EDITOR = "nvim";
+    ZSH_COLORIZE_STYLE = "monokai";
+  };
 
   programs.git = {
     enable = true;
@@ -38,10 +43,11 @@ in
     syntaxHighlighting.enable = true;  # commands turn green when valid
     initContent = ''
       bindkey '^f' autosuggest-accept
+      eval "$(fnm env --use-on-cd --shell zsh)"
     '';
     oh-my-zsh = {
       enable = true;
-      plugins = [ "git" "z" ];
+      plugins = [ "git" "z" "colorize"];
     };
     shellAliases = {
       m = "git switch main";
