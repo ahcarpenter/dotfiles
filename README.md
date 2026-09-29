@@ -110,7 +110,8 @@ If you don't use it, remove the `signing` block and the cask in your copy, or yo
 
 **Safe reruns:** a switch never removes Homebrew packages and never overwrites your Claude Code settings.
 `configuration.nix` sets `homebrew.onActivation.cleanup = "none"`, so Homebrew installs what's in `brews` and `casks` and leaves anything else you installed alone.
-`~/.claude/settings.json` is not linked into the repo: each switch backs it up and adds only the keys from `home/.claude/settings.json` that it's missing, and your existing values always win.
+`~/.claude/settings.json` is not linked into the repo: each switch adds only the keys from `home/.claude/settings.json` that it's missing (backing it up first), and your existing values always win.
+If the live file isn't valid JSON, the switch leaves it untouched and prints a warning.
 Any other file home-manager finds in its way is moved aside with a `.backup` extension instead of stopping the switch.
 
 **About `herdr`:** it's in the `brews` list.
