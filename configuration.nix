@@ -31,9 +31,8 @@
   };
   homebrew = {
     enable = true;
-    onActivation.cleanup = "zap";  # remove anything not listed here
+    onActivation.cleanup = "none";  # install what's listed, leave everything else alone
     onActivation.autoUpdate = true;
-    onActivation.extraFlags = [ "--force" ];
     taps = [
       { name = "rjyo/moshi"; trusted = true; }
       { name = "automic-vault/isotopes"; trusted = true; }
