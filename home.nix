@@ -1,4 +1,4 @@
-{ config, pkgs, user, ... }:
+{ config, lib, pkgs, user, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -76,11 +76,18 @@ in
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/nvim";
   home.file.".config/herdr".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.config/herdr";
-  home.file.".claude/settings.json".source =
-    config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/.claude/settings.json";
 
   home.file.".claude/CLAUDE.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
   home.file.".codex/AGENTS.md".source =
     config.lib.file.mkOutOfStoreSymlink "${dotfiles}/home/AGENTS.md";
+
+  # Claude Code writes to its own settings, so it isn't linked: each rebuild
+  # adds only the repo keys the live file lacks, after backing it up.
+  # Runs before linkGeneration so the old link becomes a regular file before
+  # home-manager cleans up links from the previous generation.
+  home.activation.mergeClaudeSettings = lib.hm.dag.entryBetween [ "linkGeneration" ] [ "writeBoundary" ] ''
+    ${lib.getExe (pkgs.callPackage ./scripts/merge-claude-settings.nix { })} \
+      ${./home/.claude/settings.json} "$HOME/.claude/settings.json"
+  '';
 }
