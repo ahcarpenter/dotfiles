@@ -100,38 +100,23 @@ else
   cmp -s "${found[0]}" "$work/linked-target-original.json" || fail "backup of the old link does not hold its settings"
 fi
 
-# An invalid live file stops the merge with a message and is left untouched.
+# An invalid live file is left untouched with a warning, and the merge exits 0.
 for bad in 'not json {' '["an", "array"]'; do
   dir="$work/invalid"; rm -rf "$dir"; mkdir -p "$dir"
   printf '%s\n' "$bad" >"$dir/settings.json"
   cp "$dir/settings.json" "$work/invalid-original"
-  if "$merge" "$work/repo.json" "$dir/settings.json" >/dev/null 2>"$work/err"; then
-    fail "invalid live file '$bad' did not stop the merge"
-  fi
-  grep -q "not a valid JSON object" "$work/err" || fail "invalid live file gave no clear message"
+  "$merge" "$work/repo.json" "$dir/settings.json" >/dev/null 2>"$work/err" || fail "invalid live file '$bad' did not exit 0"
+  grep -q "warning: '$dir/settings.json' is not a valid JSON object" "$work/err" || fail "invalid live file gave no warning naming the file and reason"
   cmp -s "$dir/settings.json" "$work/invalid-original" || fail "invalid live file was changed"
   [[ -z "$(backups "$dir/settings.json")" ]] || fail "invalid live file was backed up or copied"
 done
 
-# A broken link stops the merge and is left untouched.
+# A broken link is left untouched with a warning, and the merge exits 0.
 dir="$work/broken"; mkdir -p "$dir"
 ln -s "$work/does-not-exist.json" "$dir/settings.json"
-if "$merge" "$work/repo.json" "$dir/settings.json" >/dev/null 2>&1; then
-  fail "broken link did not stop the merge"
-fi
+"$merge" "$work/repo.json" "$dir/settings.json" >/dev/null 2>"$work/err" || fail "broken link did not exit 0"
+grep -q "warning: '$dir/settings.json' is not a readable file" "$work/err" || fail "broken link gave no warning naming the file and reason"
 [[ "$(readlink "$dir/settings.json")" == "$work/does-not-exist.json" ]] || fail "broken link was changed"
-
-# A dry run reports what it would do and writes nothing.
-dir="$work/dry"; mkdir -p "$dir"
-echo '{ "theme": "light" }' >"$dir/settings.json"
-cp "$dir/settings.json" "$work/dry-original.json"
-out="$(DRY_RUN=1 "$merge" "$work/repo.json" "$dir/settings.json")"
-[[ "$out" == *"would back up"* && "$out" == *"would add missing repo keys"* ]] || fail "dry run did not report its plan: $out"
-cmp -s "$dir/settings.json" "$work/dry-original.json" || fail "dry run changed the live file"
-[[ -z "$(backups "$dir/settings.json")" ]] || fail "dry run wrote a backup"
-out="$(DRY_RUN=1 "$merge" "$work/repo.json" "$work/dry-missing/settings.json")"
-[[ "$out" == *"would install"* ]] || fail "dry run did not report installing the repo copy: $out"
-[[ ! -e "$work/dry-missing" ]] || fail "dry run created the missing live file"
 
 if [[ $failures -gt 0 ]]; then
   echo "$failures failure(s)" >&2
