@@ -36,6 +36,7 @@
     onActivation.extraFlags = [ "--force" ];
     taps = [
       { name = "rjyo/moshi"; trusted = true; }
+      { name = "automic-vault/isotopes"; trusted = true; }
     ];
     brews = [
       "herdr"
@@ -47,6 +48,7 @@
       "wezterm"
       "claude-code"
       "opensuperwhisper"
+      "automic-vault"
     ];
   };
 }

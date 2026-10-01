@@ -35,6 +35,12 @@ in
       name = "Andrew Carpenter";
       email = "drewwcarpenter@gmail.com";
     };
+    # Automic Vault signs every commit and tag, and picks the key itself.
+    signing = {
+      format = "openpgp";
+      signByDefault = true;
+      signer = "/Applications/Automic Vault.app/Contents/MacOS/av-gpg";
+    };
   };
 
   programs.zsh = {

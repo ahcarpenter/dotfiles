@@ -88,7 +88,7 @@ If you clone it, review these before you run `bootstrap.sh`:
   All three have to match.
 - **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
 
-**Git identity:** Managed declaratively, within `home.nix`via:
+**Git identity and signing:** Managed declaratively, within `home.nix` via:
 
 ```nix
 programs.git = {
@@ -97,8 +97,16 @@ programs.git = {
     name = "Andrew Carpenter";
     email = "drewwcarpenter@gmail.com";
   };
+  signing = {
+    format = "openpgp";
+    signByDefault = true;
+    signer = "/Applications/Automic Vault.app/Contents/MacOS/av-gpg";
+  };
 };
 ```
+
+Every commit and tag is signed through [Automic Vault](https://github.com/automic-vault/automic-vault), installed by the `automic-vault` cask in `configuration.nix`.
+If you don't use it, remove the `signing` block and the cask in your copy, or your commits will fail.
 
 **Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
 That means every time you switch, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
