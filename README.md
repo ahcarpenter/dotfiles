@@ -97,7 +97,7 @@ programs.git = {
     name = "Andrew Carpenter";
     email = "drewwcarpenter@gmail.com";
   };
-  signing = {
+  signing = lib.mkIf pkgs.stdenv.isDarwin {
     format = "openpgp";
     signByDefault = true;
     signer = "/Applications/Automic Vault.app/Contents/MacOS/av-gpg";

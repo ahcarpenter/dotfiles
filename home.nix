@@ -1,4 +1,4 @@
-{ config, pkgs, user, ... }:
+{ config, lib, pkgs, user, ... }:
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
@@ -36,7 +36,8 @@ in
       email = "drewwcarpenter@gmail.com";
     };
     # Automic Vault signs every commit and tag, and picks the key itself.
-    signing = {
+    # It only runs on macOS, so other systems keep home-manager's defaults.
+    signing = lib.mkIf pkgs.stdenv.isDarwin {
       format = "openpgp";
       signByDefault = true;
       signer = "/Applications/Automic Vault.app/Contents/MacOS/av-gpg";
