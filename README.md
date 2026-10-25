@@ -116,6 +116,7 @@ A switch notices that and installs whatever is missing from `taps`, `brews` and 
 A denied or failed install prints a warning with the command to run yourself, and the rest of the switch carries on.
 Before Homebrew is hardened (a fresh Mac, say), a switch runs `brew bundle` as usual.
 `casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
+`/usr/local/bin` comes first in `PATH` so `brew` is Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
 
 **Safe reruns:** a switch never removes Homebrew packages and never overwrites your Claude Code settings.
 `configuration.nix` sets `homebrew.onActivation.cleanup = "none"`, so Homebrew installs what's in `brews` and `casks` and leaves anything else you installed alone.

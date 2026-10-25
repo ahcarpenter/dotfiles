@@ -45,6 +45,22 @@ in
   nix-homebrew = {
     enable = true;
     inherit user;
+    # Its shell hook runs `brew shellenv`, which puts Homebrew's bin ahead of
+    # Automic Vault's brew and adds Homebrew's zsh completions, which zsh
+    # refuses once Automic Vault owns them. The PATH below replaces it.
+    enableBashIntegration = false;
+    enableFishIntegration = false;
+    enableZshIntegration = false;
+  };
+
+  # Automic Vault's brew in /usr/local/bin has to come before Homebrew's own
+  # and before nix-homebrew's launcher in the Nix profiles.
+  environment.systemPath = lib.mkBefore [ "/usr/local/bin" "${brewPrefix}/bin" "${brewPrefix}/sbin" ];
+  environment.variables = {
+    HOMEBREW_PREFIX = brewPrefix;
+    HOMEBREW_CELLAR = "${brewPrefix}/Cellar";
+    HOMEBREW_REPOSITORY = "${config.nix-homebrew.prefixes.${brewPrefix}.library}/.homebrew-is-managed-by-nix";
+    INFOPATH = "${brewPrefix}/share/info:";
   };
 
   homebrew = {
