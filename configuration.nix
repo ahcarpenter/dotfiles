@@ -92,7 +92,7 @@ in
 
     if ${vaultBrew} --automic-vault-brew-stub-marker 2>/dev/null | grep -q '^AUTOMIC_VAULT_BREW_STUB_'; then
       echo >&2 "Homebrew is hardened by Automic Vault, installing what's missing through its brew..."
-      ${lib.getExe hardenedBrewInstall} ${lib.escapeShellArgs ([ config.homebrew.user brewPrefix vaultBrew ] ++ hardenedBrewItems)}
+      ${lib.getExe hardenedBrewInstall} ${lib.escapeShellArgs ([ config.homebrew.user brewPrefix config.nix-homebrew.prefixes.${brewPrefix}.library vaultBrew ] ++ hardenedBrewItems)}
     else
       # nix-darwin's Homebrew Bundle step, as in its modules/homebrew.nix.
       echo >&2 "Homebrew bundle..."

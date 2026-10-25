@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # Install what's missing from the Homebrew lists through Automic Vault's brew.
 #
-# Usage: hardened-brew-install <user> <prefix> <brew> <item>...
+# Usage: hardened-brew-install <user> <prefix> <library> <brew> <item>...
 #
 # Items are `tap:<name>`, `trusted-tap:<name>`, `formula:<name>` and `cask:<name>`,
-# in install order. Hardened Homebrew refuses `brew bundle`, and the user can't
-# write the prefix, so each missing item gets its own command through <brew>
-# (Automic Vault's brew, which asks for approval). Installed items are left
-# alone: nothing is upgraded or removed. A denied or failed install prints a
-# warning and the rest carry on, so the rebuild never stops here.
+# in install order. <library> is Homebrew's Library directory, which is not
+# under <prefix> on every Mac (/usr/local/Homebrew/Library on Intel). Hardened
+# Homebrew refuses `brew bundle`, and the user can't write the prefix, so each
+# missing item gets its own command through <brew> (Automic Vault's brew,
+# which asks for approval). Installed items are left alone: nothing is upgraded
+# or removed. A denied or failed install prints a warning and the rest carry
+# on, so the rebuild never stops here.
 #
 # Run as root, as during a rebuild: brew commands then run as <user> in that
 # user's login context, since Automic Vault's brew refuses root and asks for
@@ -17,15 +19,16 @@
 # owned by <user> on every rebuild, inside the prefix Automic Vault protects.
 set -euo pipefail
 
-if [[ $# -lt 3 ]]; then
-  echo "usage: hardened-brew-install <user> <prefix> <brew> <item>..." >&2
+if [[ $# -lt 4 ]]; then
+  echo "usage: hardened-brew-install <user> <prefix> <library> <brew> <item>..." >&2
   exit 2
 fi
 
 user="$1"
 prefix="$2"
-brew="$3"
-shift 3
+library="$3"
+brew="$4"
+shift 4
 
 say() {
   echo "hardened-brew-install: $*" >&2
@@ -50,7 +53,7 @@ installed() {
   case "$kind" in
     tap | trusted-tap)
       local owner="${name%%/*}" repo="${name#*/}"
-      [[ -d "$prefix/Library/Taps/${owner,,}/homebrew-${repo#homebrew-}" ]]
+      [[ -d "$library/Taps/${owner,,}/homebrew-${repo#homebrew-}" ]]
       ;;
     formula) [[ -d "$prefix/Cellar/$token" || -e "$prefix/opt/$token" ]] ;;
     cask) [[ -d "$prefix/Caskroom/$token" ]] ;;
@@ -67,7 +70,7 @@ for item in "$@"; do
   esac
 done
 
-repo="$prefix/Library/.homebrew-is-managed-by-nix"
+repo="$library/.homebrew-is-managed-by-nix"
 if [[ -d "$repo" && ! -L "$repo" ]]; then
   chown -R "$(stat -c '%u:%g' "$prefix")" "$repo"
 fi
