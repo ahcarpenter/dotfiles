@@ -14,11 +14,12 @@ If you find a bug, please open a GitHub Issue using the bug report template.
 Running the switch builds:
 
 - System settings (dark mode, key repeat, dock, Finder, trackpad)
-- Homebrew apps (casks and CLI tools)
+- Apps from Nix (WezTerm, OpenSuperWhisper), copied into `/Applications/Nix Apps`
+- Homebrew CLI tools (formulae and command-line casks)
 - Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, gh)
 - Shell (zsh, aliases, starship prompt)
 - Editor (Neovim config with the rose-pine moon theme)
-- Terminal (WezTerm config with the rose-pine moon theme and dimmed unfocused windows)
+- Terminal (WezTerm config with the Monokai Pro theme and dimmed unfocused windows)
 - Agent configs (Claude, and Codex share one AGENTS.md)
 
 ## Prerequisites
@@ -26,6 +27,7 @@ Running the switch builds:
 - Apple Silicon Mac, by default.
 - Intel Mac: change one line.
   In `configuration.nix`, set `nixpkgs.hostPlatform = "x86_64-darwin";` (the comment right there tells you the same thing).
+  OpenSuperWhisper only ships for Apple Silicon, so an Intel build leaves it out.
 
 ## Fresh-machine setup
 
@@ -37,7 +39,7 @@ cd dotfiles
 ```
 
 Before you run it: review "Make it yours" below.
-Change the host label or CPU architecture if needed, and read the Homebrew cleanup warning.
+Change the host label or CPU architecture if needed, and read the note on what a rerun leaves alone.
 `bootstrap.sh` applies the config to your machine, so do this first.
 
 ```sh
@@ -52,6 +54,7 @@ Change the host label or CPU architecture if needed, and read the Homebrew clean
 3. Checks the `user` configured in `flake.nix` against your actual macOS username, and offers to fix it for you if they differ.
 4. Runs the first `darwin-rebuild switch`.
    It fetches the `darwin-rebuild` tool from the nix-darwin 26.05 release branch, then applies this repo's locked flake config.
+   With hardened Homebrew, it then runs `brew-sync`, as `rebuild.sh` does.
 
 After that, `darwin-rebuild` exists and you're on the normal workflow below.
 
@@ -87,6 +90,8 @@ If you clone it, review these before you run `bootstrap.sh`:
 - **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `rebuild.sh:5` (the `#mac` at the end of the flake reference), and `bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
 - **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
+- **Hardened Homebrew**, `hardenedHomebrew = true` at the top of `configuration.nix`.
+  Set it to `false` unless Automic Vault has hardened this Mac's Homebrew (see "Hardened Homebrew" below).
 
 **Git identity and signing:** Managed declaratively, within `home.nix` via:
 
@@ -105,13 +110,25 @@ programs.git = {
 };
 ```
 
-Every commit and tag is signed through [Automic Vault](https://github.com/automic-vault/automic-vault), installed by the `automic-vault` cask in `configuration.nix`.
-If you don't use it, remove the `signing` block and the cask in your copy, or your commits will fail.
+Every commit and tag is signed through [Automic Vault](https://github.com/automic-vault/automic-vault).
+Install it yourself from its [latest release](https://github.com/automic-vault/automic-vault/releases/latest): it isn't in the Homebrew lists, because its cask installs an app, which hardened Homebrew refuses.
+If you don't use it, remove the `signing` block in your copy, or your commits will fail.
 
-**Homebrew cleanup warning:** `configuration.nix` sets `homebrew.onActivation.cleanup = "zap"`.
-That means every time you switch, Homebrew removes any package or cask on your machine that isn't listed in the `brews` and `casks` arrays in `configuration.nix`.
-If you already have Homebrew stuff installed that isn't in that list, the first switch will uninstall it.
-Read through `brews` and `casks` before you run `bootstrap.sh` or `rebuild.sh` for the first time, and add anything you want to keep.
+**Hardened Homebrew:** once you run Automic Vault's `av harden brew`, its `brew` in `/usr/local/bin` is the only thing that may change Homebrew, and it refuses `brew bundle`.
+`hardenedHomebrew` in `configuration.nix` says whether that's done on this Mac.
+When it's `true`, nix-homebrew sets Homebrew up as Automic Vault's `automic` account and nix-darwin's `brew bundle` step is off.
+After the switch, `rebuild.sh` runs `brew-sync` as you, which installs whatever is missing from `taps`, `brews` and `casks` one at a time through Automic Vault's `brew`, so each install waits for your approval in Automic Vault.
+A denied or failed install prints a warning with the command to run yourself, and the rest carry on.
+When it's `false`, a switch runs `brew bundle` as usual.
+On a fresh Mac, start with `false`; after `av harden brew`, set it to `true` and run `./rebuild.sh`.
+`casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
+`/usr/local/bin` comes first in `PATH` so `brew` is Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
+
+**Safe reruns:** a switch never removes Homebrew packages and never overwrites your Claude Code settings.
+`configuration.nix` sets `homebrew.onActivation.cleanup = "none"`, so Homebrew installs what's in `brews` and `casks` and leaves anything else you installed alone.
+`~/.claude/settings.json` is not linked into the repo: each switch adds only the keys from `home/.claude/settings.json` that it's missing (backing it up first), and your existing values always win.
+If the live file isn't valid JSON, the switch leaves it untouched and prints a warning.
+Any other file home-manager finds in its way is moved aside with a `.backup` extension instead of stopping the switch.
 
 **About `herdr`:** it's in the `brews` list.
 It's a real public Homebrew formula (`brew info herdr` finds it in homebrew-core, no tap needed), so it will install fine.
@@ -128,11 +145,13 @@ If you don't use it, just remove it from `brews` in your copy.
 
 - `flake.nix` - the entry point.
   Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine.
-- `configuration.nix` - system-level config: macOS defaults, Homebrew.
+- `configuration.nix` - system-level config: macOS defaults, apps, Homebrew.
 - `home.nix` - user-level config: shell, packages, prompt, and the symlinks described below.
-- `rebuild.sh` - re-applies the config after the first switch.
+- `rebuild.sh` - re-applies the config after the first switch, then runs `brew-sync` if Homebrew is hardened.
   Run this every time you make a change.
-- `home/` - the actual config files that get symlinked into place; the sections below explain the shared symlink model and Pi's narrower selective setup.
+- `home/` - the actual config files that get symlinked into place (except `home/.claude/settings.json`, which is merged in; see "Safe reruns"); the sections below explain the shared symlink model and Pi's narrower selective setup.
+- `pkgs/` - OpenSuperWhisper, which isn't in nixpkgs, packaged from its signed release.
+- `scripts/` - the Claude Code settings merge that runs on each switch, `brew-sync` for hardened Homebrew, and their tests (run by `nix flake check`).
 
 ## How the symlinks work
 
@@ -144,7 +163,7 @@ You only run `./rebuild.sh` when you change something that isn't just a symlinke
 
 The first time you launch `nvim`, it bootstraps [lazy.nvim](https://github.com/folke/lazy.nvim) by cloning plugins from GitHub.
 That needs network access once; after that it's offline.
-Neovim and WezTerm both use the rose-pine moon theme.
+Neovim uses the rose-pine moon theme, and WezTerm uses Monokai Pro.
 Neovim keeps italics off and uses a transparent background on macOS, Windows, and WSL so it matches the terminal setup.
 
 ## License

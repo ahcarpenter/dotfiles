@@ -1,5 +1,25 @@
-{ user, ... }:
+{ config, lib, pkgs, user, ... }:
 
+let
+  # Whether Automic Vault's `av harden brew` has hardened this Mac's Homebrew.
+  # Keep it false on a Mac where it hasn't, including a fresh one.
+  hardenedHomebrew = true;
+
+  brewPrefix = config.homebrew.prefix;
+  # Installed by `av harden brew`; once it's there, it is the only brew that may change Homebrew.
+  vaultBrew = "/usr/local/bin/brew";
+  opensuperwhisper = pkgs.callPackage ./pkgs/opensuperwhisper.nix { };
+  # Installs what's missing from the Homebrew lists below through Automic
+  # Vault's brew. rebuild.sh runs it as you after the switch.
+  brewSync = pkgs.writeShellScriptBin "brew-sync" ''
+    exec ${lib.getExe (pkgs.callPackage ./scripts/brew-sync.nix { })} ${lib.escapeShellArgs (
+      [ brewPrefix config.nix-homebrew.prefixes.${brewPrefix}.library vaultBrew ]
+      ++ map (tap: "${if tap.trusted then "trusted-tap" else "tap"}:${tap.name}") config.homebrew.taps
+      ++ map (brew: "formula:${brew.name}") config.homebrew.brews
+      ++ map (cask: "cask:${cask.name}") config.homebrew.casks
+    )}
+  '';
+in
 {
   # Determinate already manages the Nix daemon, so nix-darwin shouldn't.
   nix.enable = false;
@@ -25,15 +45,43 @@
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click
   };
+
+  # Apps come from Nix and land in /Applications/Nix Apps, because hardened
+  # Homebrew only accepts command-line casks.
+  environment.systemPackages = [ pkgs.wezterm ]
+    ++ lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform opensuperwhisper) opensuperwhisper
+    ++ lib.optional hardenedHomebrew brewSync;
+
   nix-homebrew = {
     enable = true;
-    inherit user;
+    # Hardened Homebrew belongs to Automic Vault's account, so nix-homebrew
+    # sets it up as that account.
+    user = if hardenedHomebrew then "automic" else user;
+    group = lib.mkIf hardenedHomebrew "vault";
+    # Its shell hook runs `brew shellenv`, which puts Homebrew's bin ahead of
+    # Automic Vault's brew and adds Homebrew's zsh completions, which zsh
+    # refuses once Automic Vault owns them. The PATH below replaces it.
+    enableBashIntegration = false;
+    enableFishIntegration = false;
+    enableZshIntegration = false;
   };
+
+  # Automic Vault's brew in /usr/local/bin has to come before Homebrew's own
+  # and before nix-homebrew's launcher in the Nix profiles.
+  environment.systemPath = lib.mkBefore [ "/usr/local/bin" "${brewPrefix}/bin" "${brewPrefix}/sbin" ];
+  environment.variables = {
+    HOMEBREW_PREFIX = brewPrefix;
+    HOMEBREW_CELLAR = "${brewPrefix}/Cellar";
+    HOMEBREW_REPOSITORY = "${config.nix-homebrew.prefixes.${brewPrefix}.library}/.homebrew-is-managed-by-nix";
+    INFOPATH = "${brewPrefix}/share/info:";
+  };
+
   homebrew = {
-    enable = true;
-    onActivation.cleanup = "zap";  # remove anything not listed here
+    # Hardened Homebrew refuses `brew bundle`, so there brew-sync installs
+    # these lists instead of nix-darwin's Homebrew step.
+    enable = !hardenedHomebrew;
+    onActivation.cleanup = "none";  # install what's listed, leave everything else alone
     onActivation.autoUpdate = true;
-    onActivation.extraFlags = [ "--force" ];
     taps = [
       { name = "rjyo/moshi"; trusted = true; }
       { name = "automic-vault/isotopes"; trusted = true; }
@@ -44,11 +92,9 @@
       "mosh"
       "moshi-hook"
     ];
+    # Only command-line casks: hardened Homebrew refuses app casks.
     casks = [
-      "wezterm"
-      "claude-code"
-      "opensuperwhisper"
-      "automic-vault"
+      "claude-code@latest"
     ];
   };
 }

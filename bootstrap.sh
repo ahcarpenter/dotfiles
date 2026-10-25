@@ -59,5 +59,9 @@ sudo "$NIX_BIN" run github:nix-darwin/nix-darwin/nix-darwin-26.05#darwin-rebuild
   switch --flake ~/.dotfiles#mac
 # If this still fails with "nix: command not found", open a new terminal
 # (Determinate adds nix to new shells' PATH) and re-run ./bootstrap.sh.
+# Only there with hardened Homebrew, as in rebuild.sh.
+if [ -x /run/current-system/sw/bin/brew-sync ]; then
+  /run/current-system/sw/bin/brew-sync
+fi
 
 echo "==> Done. Use ./rebuild.sh for future changes."

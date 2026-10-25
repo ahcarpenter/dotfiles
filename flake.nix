@@ -30,10 +30,37 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            # Move any other file in the way aside instead of stopping the rebuild.
+            home-manager.backupFileExtension = "backup";
             home-manager.extraSpecialArgs = { inherit user; };
             home-manager.users.${user} = import ./home.nix;
           }
         ];
       };
+
+      checks =
+        let
+          pkgs = self.darwinConfigurations."mac".pkgs;
+          merge = pkgs.callPackage ./scripts/merge-claude-settings.nix { };
+          brewSync = pkgs.callPackage ./scripts/brew-sync.nix { };
+        in
+        {
+          ${pkgs.stdenv.hostPlatform.system} = {
+            merge-claude-settings =
+              pkgs.runCommand "test-merge-claude-settings"
+                { nativeBuildInputs = [ pkgs.bash pkgs.jq pkgs.coreutils pkgs.findutils pkgs.gnugrep ]; }
+                ''
+                  bash ${./scripts/test-merge-claude-settings.sh} ${pkgs.lib.getExe merge}
+                  touch $out
+                '';
+            brew-sync =
+              pkgs.runCommand "test-brew-sync"
+                { nativeBuildInputs = [ pkgs.bash pkgs.coreutils pkgs.gnugrep ]; }
+                ''
+                  bash ${./scripts/test-brew-sync.sh} ${pkgs.lib.getExe brewSync}
+                  touch $out
+                '';
+          };
+        };
     };
 }
