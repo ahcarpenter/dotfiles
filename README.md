@@ -14,12 +14,12 @@ If you find a bug, please open a GitHub Issue using the bug report template.
 Running the switch builds:
 
 - System settings (dark mode, key repeat, dock, Finder, trackpad)
-- Apps from Nix (WezTerm, OpenSuperWhisper), copied into `/Applications/Nix Apps`
+- Apps from Nix (Ghostty, OpenSuperWhisper), copied into `/Applications/Nix Apps`
 - Homebrew CLI tools (formulae and command-line casks)
 - Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, gh)
 - Shell (zsh, aliases, starship prompt)
 - Editor (Neovim config with the rose-pine moon theme)
-- Terminal (WezTerm config with the Monokai Pro theme and dimmed unfocused windows)
+- Terminal (Ghostty config with the Monokai Pro theme and dimmed unfocused windows)
 - Agent configs (Claude, and Codex share one AGENTS.md)
 
 ## Prerequisites
@@ -163,8 +163,9 @@ You only run `./rebuild.sh` when you change something that isn't just a symlinke
 
 The first time you launch `nvim`, it bootstraps [lazy.nvim](https://github.com/folke/lazy.nvim) by cloning plugins from GitHub.
 That needs network access once; after that it's offline.
-Neovim uses the rose-pine moon theme, and WezTerm uses Monokai Pro.
+Neovim uses the rose-pine moon theme, and Ghostty uses Monokai Pro.
 Neovim keeps italics off and uses a transparent background on macOS, Windows, and WSL so it matches the terminal setup.
+Ghostty has no setting that dims an unfocused window, so its config loads `shaders/dim-unfocused.glsl`, a custom shader that dims any terminal without focus, including an unfocused split.
 
 ## License
 

@@ -48,7 +48,7 @@ in
 
   # Apps come from Nix and land in /Applications/Nix Apps, because hardened
   # Homebrew only accepts command-line casks.
-  environment.systemPackages = [ pkgs.wezterm ]
+  environment.systemPackages = [ pkgs.ghostty-bin ]
     ++ lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform opensuperwhisper) opensuperwhisper
     ++ lib.optional hardenedHomebrew brewSync;
 

@@ -1,0 +1,13 @@
+theme = Monokai Pro
+font-family = Hack Nerd Font
+font-size = 15
+background-opacity = 0.8
+background-blur = 50
+
+# Dim unfocused windows so the focused one is obvious at a glance.
+custom-shader = shaders/dim-unfocused.glsl
+# The shader doesn't animate, so only render when something changes.
+custom-shader-animation = false
+
+# Nix installs and updates Ghostty, so its own updater stays off.
+auto-update = off
