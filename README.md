@@ -14,7 +14,8 @@ If you find a bug, please open a GitHub Issue using the bug report template.
 Running the switch builds:
 
 - System settings (dark mode, key repeat, dock, Finder, trackpad)
-- Homebrew apps (casks and CLI tools)
+- Apps from Nix (WezTerm, OpenSuperWhisper), copied into `/Applications/Nix Apps`
+- Homebrew CLI tools (formulae and command-line casks)
 - Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, gh)
 - Shell (zsh, aliases, starship prompt)
 - Editor (Neovim config with the rose-pine moon theme)
@@ -26,6 +27,7 @@ Running the switch builds:
 - Apple Silicon Mac, by default.
 - Intel Mac: change one line.
   In `configuration.nix`, set `nixpkgs.hostPlatform = "x86_64-darwin";` (the comment right there tells you the same thing).
+  OpenSuperWhisper only ships for Apple Silicon, so an Intel build leaves it out.
 
 ## Fresh-machine setup
 
@@ -105,8 +107,9 @@ programs.git = {
 };
 ```
 
-Every commit and tag is signed through [Automic Vault](https://github.com/automic-vault/automic-vault), installed by the `automic-vault` cask in `configuration.nix`.
-If you don't use it, remove the `signing` block and the cask in your copy, or your commits will fail.
+Every commit and tag is signed through [Automic Vault](https://github.com/automic-vault/automic-vault).
+Install it yourself from its [latest release](https://github.com/automic-vault/automic-vault/releases/latest): it isn't in the Homebrew lists, because its cask installs an app, which hardened Homebrew refuses.
+If you don't use it, remove the `signing` block in your copy, or your commits will fail.
 
 **Safe reruns:** a switch never removes Homebrew packages and never overwrites your Claude Code settings.
 `configuration.nix` sets `homebrew.onActivation.cleanup = "none"`, so Homebrew installs what's in `brews` and `casks` and leaves anything else you installed alone.
@@ -129,11 +132,12 @@ If you don't use it, just remove it from `brews` in your copy.
 
 - `flake.nix` - the entry point.
   Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine.
-- `configuration.nix` - system-level config: macOS defaults, Homebrew.
+- `configuration.nix` - system-level config: macOS defaults, apps, Homebrew.
 - `home.nix` - user-level config: shell, packages, prompt, and the symlinks described below.
 - `rebuild.sh` - re-applies the config after the first switch.
   Run this every time you make a change.
 - `home/` - the actual config files that get symlinked into place (except `home/.claude/settings.json`, which is merged in; see "Safe reruns"); the sections below explain the shared symlink model and Pi's narrower selective setup.
+- `pkgs/` - OpenSuperWhisper, which isn't in nixpkgs, packaged from its signed release.
 - `scripts/` - the Claude Code settings merge that runs on each switch, and its test (run by `nix flake check`).
 
 ## How the symlinks work

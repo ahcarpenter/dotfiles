@@ -1,5 +1,8 @@
-{ user, ... }:
+{ lib, pkgs, user, ... }:
 
+let
+  opensuperwhisper = pkgs.callPackage ./pkgs/opensuperwhisper.nix { };
+in
 {
   # Determinate already manages the Nix daemon, so nix-darwin shouldn't.
   nix.enable = false;
@@ -25,10 +28,17 @@
     finder.CreateDesktop = false;          # clean desktop
     trackpad.Clicking = true;              # tap to click
   };
+
+  # Apps come from Nix and land in /Applications/Nix Apps, because hardened
+  # Homebrew only accepts command-line casks.
+  environment.systemPackages = [ pkgs.wezterm ]
+    ++ lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform opensuperwhisper) opensuperwhisper;
+
   nix-homebrew = {
     enable = true;
     inherit user;
   };
+
   homebrew = {
     enable = true;
     onActivation.cleanup = "none";  # install what's listed, leave everything else alone
@@ -43,11 +53,9 @@
       "mosh"
       "moshi-hook"
     ];
+    # Only command-line casks: hardened Homebrew refuses app casks.
     casks = [
-      "wezterm"
-      "claude-code"
-      "opensuperwhisper"
-      "automic-vault"
+      "claude-code@latest"
     ];
   };
 }
