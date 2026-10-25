@@ -42,15 +42,25 @@
         let
           pkgs = self.darwinConfigurations."mac".pkgs;
           merge = pkgs.callPackage ./scripts/merge-claude-settings.nix { };
+          hardenedBrewInstall = pkgs.callPackage ./scripts/hardened-brew-install.nix { };
         in
         {
-          ${pkgs.stdenv.hostPlatform.system}.merge-claude-settings =
-            pkgs.runCommand "test-merge-claude-settings"
-              { nativeBuildInputs = [ pkgs.bash pkgs.jq pkgs.coreutils pkgs.findutils pkgs.gnugrep ]; }
-              ''
-                bash ${./scripts/test-merge-claude-settings.sh} ${pkgs.lib.getExe merge}
-                touch $out
-              '';
+          ${pkgs.stdenv.hostPlatform.system} = {
+            merge-claude-settings =
+              pkgs.runCommand "test-merge-claude-settings"
+                { nativeBuildInputs = [ pkgs.bash pkgs.jq pkgs.coreutils pkgs.findutils pkgs.gnugrep ]; }
+                ''
+                  bash ${./scripts/test-merge-claude-settings.sh} ${pkgs.lib.getExe merge}
+                  touch $out
+                '';
+            hardened-brew-install =
+              pkgs.runCommand "test-hardened-brew-install"
+                { nativeBuildInputs = [ pkgs.bash pkgs.coreutils pkgs.gnugrep ]; }
+                ''
+                  bash ${./scripts/test-hardened-brew-install.sh} ${pkgs.lib.getExe hardenedBrewInstall}
+                  touch $out
+                '';
+          };
         };
     };
 }

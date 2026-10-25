@@ -111,6 +111,12 @@ Every commit and tag is signed through [Automic Vault](https://github.com/automi
 Install it yourself from its [latest release](https://github.com/automic-vault/automic-vault/releases/latest): it isn't in the Homebrew lists, because its cask installs an app, which hardened Homebrew refuses.
 If you don't use it, remove the `signing` block in your copy, or your commits will fail.
 
+**Hardened Homebrew:** once you run Automic Vault's `av harden brew`, its `brew` in `/usr/local/bin` is the only thing that may change Homebrew, and it refuses `brew bundle`.
+A switch notices that and installs whatever is missing from `taps`, `brews` and `casks` one at a time through Automic Vault's `brew`, so each install waits for your approval in Automic Vault.
+A denied or failed install prints a warning with the command to run yourself, and the rest of the switch carries on.
+Before Homebrew is hardened (a fresh Mac, say), a switch runs `brew bundle` as usual.
+`casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
+
 **Safe reruns:** a switch never removes Homebrew packages and never overwrites your Claude Code settings.
 `configuration.nix` sets `homebrew.onActivation.cleanup = "none"`, so Homebrew installs what's in `brews` and `casks` and leaves anything else you installed alone.
 `~/.claude/settings.json` is not linked into the repo: each switch adds only the keys from `home/.claude/settings.json` that it's missing (backing it up first), and your existing values always win.
@@ -138,7 +144,7 @@ If you don't use it, just remove it from `brews` in your copy.
   Run this every time you make a change.
 - `home/` - the actual config files that get symlinked into place (except `home/.claude/settings.json`, which is merged in; see "Safe reruns"); the sections below explain the shared symlink model and Pi's narrower selective setup.
 - `pkgs/` - OpenSuperWhisper, which isn't in nixpkgs, packaged from its signed release.
-- `scripts/` - the Claude Code settings merge that runs on each switch, and its test (run by `nix flake check`).
+- `scripts/` - the Claude Code settings merge and the hardened Homebrew install that run on each switch, and their tests (run by `nix flake check`).
 
 ## How the symlinks work
 
