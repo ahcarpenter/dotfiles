@@ -1,50 +1,36 @@
 #!/usr/bin/env bash
 # Install what's missing from the Homebrew lists through Automic Vault's brew.
 #
-# Usage: hardened-brew-install <user> <prefix> <library> <brew> <item>...
+# Usage: brew-sync <prefix> <library> <brew> <item>...
 #
 # Items are `tap:<name>`, `trusted-tap:<name>`, `formula:<name>` and `cask:<name>`,
 # in install order. <library> is Homebrew's Library directory, which is not
 # under <prefix> on every Mac (/usr/local/Homebrew/Library on Intel). Hardened
-# Homebrew refuses `brew bundle`, and the user can't write the prefix, so each
-# missing item gets its own command through <brew> (Automic Vault's brew,
-# which asks for approval). Installed items are left alone: nothing is upgraded
-# or removed. A denied or failed install prints a warning and the rest carry
-# on, so the rebuild never stops here.
+# Homebrew refuses `brew bundle`, so each missing item gets its own command
+# through <brew> (Automic Vault's brew, which asks for approval). Installed
+# items are left alone: nothing is upgraded or removed. A denied or failed
+# install prints a warning and the rest carry on.
 #
-# Run as root, as during a rebuild: brew commands then run as <user> in that
-# user's login context, since Automic Vault's brew refuses root and asks for
-# approval through the user's session. Before installing, nix-homebrew's fake
-# repository is handed back to the prefix's owner: nix-homebrew recreates it
-# owned by <user> on every rebuild, inside the prefix Automic Vault protects.
+# Run it as yourself, as rebuild.sh does after a switch: Automic Vault's brew
+# refuses root and asks for approval in your session.
 set -euo pipefail
 
-if [[ $# -lt 4 ]]; then
-  echo "usage: hardened-brew-install <user> <prefix> <library> <brew> <item>..." >&2
+if [[ $# -lt 3 ]]; then
+  echo "usage: brew-sync <prefix> <library> <brew> <item>..." >&2
   exit 2
 fi
 
-user="$1"
-prefix="$2"
-library="$3"
-brew="$4"
-shift 4
+prefix="$1"
+library="$2"
+brew="$3"
+shift 3
 
 say() {
-  echo "hardened-brew-install: $*" >&2
+  echo "brew-sync: $*" >&2
 }
 
 warn() {
-  echo "hardened-brew-install: warning: $*" >&2
-}
-
-run_brew() {
-  if [[ $EUID -eq 0 ]]; then
-    # In the user's login context, where Automic Vault's approval service runs.
-    (cd / && /bin/launchctl asuser "$(id -u "$user")" /usr/bin/sudo --user="$user" -- "$brew" "$@")
-  else
-    (cd / && "$brew" "$@")
-  fi
+  echo "brew-sync: warning: $*" >&2
 }
 
 installed() {
@@ -64,15 +50,15 @@ for item in "$@"; do
   case "${item%%:*}" in
     tap | trusted-tap | formula | cask) ;;
     *)
-      echo "hardened-brew-install: unknown item '$item'" >&2
+      echo "brew-sync: unknown item '$item'" >&2
       exit 2
       ;;
   esac
 done
 
-repo="$library/.homebrew-is-managed-by-nix"
-if [[ -d "$repo" && ! -L "$repo" ]]; then
-  chown -R "$(stat -c '%u:%g' "$prefix")" "$repo"
+if [[ $EUID -eq 0 ]]; then
+  echo "brew-sync: run it as yourself, not root: Automic Vault's brew refuses root" >&2
+  exit 2
 fi
 
 missing=0
@@ -95,7 +81,7 @@ for item in "$@"; do
   say "installing $kind $name through Automic Vault's brew (approve it in Automic Vault)"
   for command in "${commands[@]}"; do
     # shellcheck disable=SC2086 # each command is brew's own words, split on purpose
-    if ! run_brew $command; then
+    if ! "$brew" $command; then
       warn "'brew $command' was denied or failed; run it yourself to install $name"
       failed+=("$name")
       break

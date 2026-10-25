@@ -54,6 +54,7 @@ Change the host label or CPU architecture if needed, and read the note on what a
 3. Checks the `user` configured in `flake.nix` against your actual macOS username, and offers to fix it for you if they differ.
 4. Runs the first `darwin-rebuild switch`.
    It fetches the `darwin-rebuild` tool from the nix-darwin 26.05 release branch, then applies this repo's locked flake config.
+   With hardened Homebrew, it then runs `brew-sync`, as `rebuild.sh` does.
 
 After that, `darwin-rebuild` exists and you're on the normal workflow below.
 
@@ -89,6 +90,8 @@ If you clone it, review these before you run `bootstrap.sh`:
 - **Host label** `"mac"`, in three places: `flake.nix` (the `darwinConfigurations."mac"` name), `rebuild.sh:5` (the `#mac` at the end of the flake reference), and `bootstrap.sh`'s first-switch command (also `#mac`).
   All three have to match.
 - **CPU architecture**, `hostPlatform` in `configuration.nix` (see Prerequisites above).
+- **Hardened Homebrew**, `hardenedHomebrew = true` at the top of `configuration.nix`.
+  Set it to `false` unless Automic Vault has hardened this Mac's Homebrew (see "Hardened Homebrew" below).
 
 **Git identity and signing:** Managed declaratively, within `home.nix` via:
 
@@ -112,9 +115,12 @@ Install it yourself from its [latest release](https://github.com/automic-vault/a
 If you don't use it, remove the `signing` block in your copy, or your commits will fail.
 
 **Hardened Homebrew:** once you run Automic Vault's `av harden brew`, its `brew` in `/usr/local/bin` is the only thing that may change Homebrew, and it refuses `brew bundle`.
-A switch notices that and installs whatever is missing from `taps`, `brews` and `casks` one at a time through Automic Vault's `brew`, so each install waits for your approval in Automic Vault.
-A denied or failed install prints a warning with the command to run yourself, and the rest of the switch carries on.
-Before Homebrew is hardened (a fresh Mac, say), a switch runs `brew bundle` as usual.
+`hardenedHomebrew` in `configuration.nix` says whether that's done on this Mac.
+When it's `true`, nix-homebrew sets Homebrew up as Automic Vault's `automic` account and nix-darwin's `brew bundle` step is off.
+After the switch, `rebuild.sh` runs `brew-sync` as you, which installs whatever is missing from `taps`, `brews` and `casks` one at a time through Automic Vault's `brew`, so each install waits for your approval in Automic Vault.
+A denied or failed install prints a warning with the command to run yourself, and the rest carry on.
+When it's `false`, a switch runs `brew bundle` as usual.
+On a fresh Mac, start with `false`; after `av harden brew`, set it to `true` and run `./rebuild.sh`.
 `casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
 `/usr/local/bin` comes first in `PATH` so `brew` is Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
 
@@ -141,11 +147,11 @@ If you don't use it, just remove it from `brews` in your copy.
   Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine.
 - `configuration.nix` - system-level config: macOS defaults, apps, Homebrew.
 - `home.nix` - user-level config: shell, packages, prompt, and the symlinks described below.
-- `rebuild.sh` - re-applies the config after the first switch.
+- `rebuild.sh` - re-applies the config after the first switch, then runs `brew-sync` if Homebrew is hardened.
   Run this every time you make a change.
 - `home/` - the actual config files that get symlinked into place (except `home/.claude/settings.json`, which is merged in; see "Safe reruns"); the sections below explain the shared symlink model and Pi's narrower selective setup.
 - `pkgs/` - OpenSuperWhisper, which isn't in nixpkgs, packaged from its signed release.
-- `scripts/` - the Claude Code settings merge and the hardened Homebrew install that run on each switch, and their tests (run by `nix flake check`).
+- `scripts/` - the Claude Code settings merge that runs on each switch, `brew-sync` for hardened Homebrew, and their tests (run by `nix flake check`).
 
 ## How the symlinks work
 
