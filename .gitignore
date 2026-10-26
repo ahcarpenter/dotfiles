@@ -3,6 +3,13 @@ home/.config/herdr/*.log
 home/.config/herdr/session.json
 home/.config/herdr/*.sock
 home/.config/herdr/*.plugins.lock
+home/.config/herdr/*.sock.agent
+home/.config/herdr/plugins.json
+home/.config/herdr/release-notes.json
+home/.config/herdr/session-snapshots/
+# herdr-managed plugin installs; each plugin's config directory stays visible
+home/.config/herdr/plugins/*
+!home/.config/herdr/plugins/config/
 
 # macOS + nix build noise
 .DS_Store
