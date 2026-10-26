@@ -140,6 +140,9 @@ If you don't use it, just remove it from `brews` in your copy.
   If you clone this repo, you'd silently inherit my agent instructions - edit or delete `home/AGENTS.md` if you don't want that.
 - The `cc` and `co` shell aliases in `home.nix` are high-agency shortcuts: `claude --dangerously-skip-permissions` and `codex --full-auto`.
   They're convenient for me, but know what they do before you use them.
+- `home/.claude/settings.json` makes the same high-agency choices for Claude Code: auto permission mode by default, no prompt before bypass-permissions mode, and the Fable model.
+  Its `SessionStart` hooks run `gh-axi`, `chrome-devtools-axi` and `lavish-axi`, which this repo doesn't install.
+  A switch only adds the keys your settings lack, so edit that file first if you don't want these.
 
 ## Repo tour
 
