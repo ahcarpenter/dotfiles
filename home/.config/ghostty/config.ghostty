@@ -1,6 +1,12 @@
 theme = Monokai Pro
-font-family = Hack Nerd Font
+font-family = "Operator Mono SSm Lig"
+font-style = Book
+font-style-bold = Bold
+font-style-italic = Book Italic
+font-style-bold-italic = Bold Italic
 font-size = 15
+# Keep the font's programming ligatures (like => and !=) on explicitly.
+font-feature = +calt, +liga
 background-opacity = 0.8
 background-blur = 50
 

@@ -19,7 +19,7 @@ Running the switch builds:
 - Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, gh)
 - Shell (zsh, aliases, starship prompt)
 - Editor (Neovim config with the rose-pine moon theme)
-- Terminal (Ghostty config with the Monokai Pro theme and dimmed unfocused windows)
+- Terminal (Ghostty config with the Monokai Pro theme, the Operator Mono SSm Lig font with ligatures, and dimmed unfocused windows)
 - Agent configs (Claude, and Codex share one AGENTS.md)
 
 ## Prerequisites
@@ -164,6 +164,9 @@ You only run `./rebuild.sh` when you change something that isn't just a symlinke
 The first time you launch `nvim`, it bootstraps [lazy.nvim](https://github.com/folke/lazy.nvim) by cloning plugins from GitHub.
 That needs network access once; after that it's offline.
 Neovim uses the rose-pine moon theme, and Ghostty uses Monokai Pro.
+Ghostty uses the Operator Mono SSm Lig font with its programming ligatures on.
+Operator Mono SSm Lig is a paid font that is not in this repo, so install it by hand; on a machine without it, Ghostty falls back to its default font.
+Nerd Font icons and powerline glyphs come from Ghostty's built-in fallbacks, so prompt and Neovim icons still render.
 Neovim keeps italics off and uses a transparent background on macOS, Windows, and WSL so it matches the terminal setup.
 Ghostty has no setting that dims an unfocused window, so its config loads `shaders/dim-unfocused.glsl`, a custom shader that dims any terminal without focus, including an unfocused split.
 Ghostty's title bar stays blank: the config hides the folder icon and fixes the title to a space, so a tab shows only its ⌘1, ⌘2 shortcut unless you rename it.
