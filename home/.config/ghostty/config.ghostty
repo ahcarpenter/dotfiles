@@ -14,5 +14,9 @@ custom-shader = shaders/dim-unfocused.glsl
 # The shader doesn't animate, so only render when something changes.
 custom-shader-animation = false
 
+# Let programs in the terminal post macOS notifications (OSC 9 and OSC 777).
+# Ghostty only shows one while the terminal that sent it isn't focused.
+desktop-notifications = true
+
 # Nix installs and updates Ghostty, so its own updater stays off.
 auto-update = off
