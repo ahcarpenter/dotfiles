@@ -166,6 +166,7 @@ That needs network access once; after that it's offline.
 Neovim uses the rose-pine moon theme, and Ghostty uses Monokai Pro.
 Neovim keeps italics off and uses a transparent background on macOS, Windows, and WSL so it matches the terminal setup.
 Ghostty has no setting that dims an unfocused window, so its config loads `shaders/dim-unfocused.glsl`, a custom shader that dims any terminal without focus, including an unfocused split.
+Ghostty's title bar stays blank: the config hides the folder icon and fixes the title to a space, so a tab shows only its ⌘1, ⌘2 shortcut unless you rename it.
 
 ## License
 

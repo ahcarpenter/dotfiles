@@ -4,6 +4,11 @@ font-size = 15
 background-opacity = 0.8
 background-blur = 50
 
+# Keep the folder out of the title bar: no folder icon, and a blank title that
+# the shell and other programs can't change.
+macos-titlebar-proxy-icon = hidden
+title = " "
+
 # Dim unfocused windows so the focused one is obvious at a glance.
 custom-shader = shaders/dim-unfocused.glsl
 # The shader doesn't animate, so only render when something changes.
