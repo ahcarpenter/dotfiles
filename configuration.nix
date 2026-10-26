@@ -46,6 +46,17 @@ in
     trackpad.Clicking = true;              # tap to click
   };
 
+  # Touch ID for sudo, which is what Automic Vault's `av harden sudo` sets up.
+  # nix-darwin owns /etc/pam.d/sudo_local, so the line has to come from here.
+  # pam_tid is "sufficient", so sudo still asks for the password when Touch ID
+  # can't be used (lid closed, SSH).
+  security.pam.services.sudo_local = {
+    touchIdAuth = true;
+    # herdr, like tmux, runs its panes from a detached server, outside the
+    # login session Touch ID needs. This brings sudo back into it.
+    reattach = true;
+  };
+
   # Apps come from Nix and land in /Applications/Nix Apps, because hardened
   # Homebrew only accepts command-line casks.
   environment.systemPackages = [ pkgs.ghostty-bin ]
