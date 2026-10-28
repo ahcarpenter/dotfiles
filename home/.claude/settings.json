@@ -54,5 +54,9 @@
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
   "agentPushNotifEnabled": true,
-  "idleCompaction": false
+  "idleCompaction": false,
+  "env": {
+    "DISABLE_AUTOUPDATER": "1",
+    "FORCE_AUTOUPDATE_PLUGINS": "1"
+  }
 }
