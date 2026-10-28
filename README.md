@@ -16,6 +16,7 @@ Running the switch builds:
 - System settings (dark mode, key repeat, dock, Finder, trackpad)
 - Touch ID for sudo, with the password as fallback
 - Apps from Nix (Ghostty, OpenSuperWhisper), copied into `/Applications/Nix Apps`
+- Automic Vault from Nix, in `/Applications/Automic Vault.app` with its `av` CLI in `/usr/local/bin`
 - Homebrew CLI tools (formulae and command-line casks)
 - Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, gh)
 - Shell (zsh, aliases, starship prompt)
@@ -28,7 +29,7 @@ Running the switch builds:
 - Apple Silicon Mac, by default.
 - Intel Mac: change one line.
   In `configuration.nix`, set `nixpkgs.hostPlatform = "x86_64-darwin";` (the comment right there tells you the same thing).
-  OpenSuperWhisper only ships for Apple Silicon, so an Intel build leaves it out.
+  OpenSuperWhisper and Automic Vault only ship for Apple Silicon, so an Intel build leaves them out (remove the git `signing` block too, see below).
 
 ## Fresh-machine setup
 
@@ -112,7 +113,12 @@ programs.git = {
 ```
 
 Every commit and tag is signed through [Automic Vault](https://github.com/automic-vault/automic-vault).
-Install it yourself from its [latest release](https://github.com/automic-vault/automic-vault/releases/latest): it isn't in the Homebrew lists, because its cask installs an app, which hardened Homebrew refuses.
+The switch installs it from its Nix package, [automic-vault-nix](https://github.com/ahcarpenter/automic-vault-nix), not Homebrew, because its cask installs an app, which hardened Homebrew refuses.
+`programs.automic-vault.enable` in `configuration.nix` copies the app to `/Applications/Automic Vault.app`, where `signer` points, and installs its `av` CLI at `/usr/local/bin/av`, as the app's own "Install av CLI" does.
+An Automic Vault already there, for example one you installed by hand, has to be validly signed, or the switch stops before changing anything.
+The first switch replaces it only when it differs from the packaged version, and leaves an identical one alone.
+Replacing it needs your terminal allowed under System Settings > Privacy & Security > App Management.
+Every switch puts back the version pinned in `flake.lock`, so update it with `nix flake update automic-vault` and `./rebuild.sh` rather than the app's own updater, then quit and reopen Automic Vault.
 If you don't use it, remove the `signing` block in your copy, or your commits will fail.
 
 **Hardened Homebrew:** once you run Automic Vault's `av harden brew`, its `brew` in `/usr/local/bin` is the only thing that may change Homebrew, and it refuses `brew bundle`.
@@ -121,9 +127,10 @@ When it's `true`, nix-homebrew sets Homebrew up as Automic Vault's `automic` acc
 After the switch, `rebuild.sh` runs `brew-sync` as you, which installs whatever is missing from `taps`, `brews` and `casks` one at a time through Automic Vault's `brew`, so each install waits for your approval in Automic Vault.
 A denied or failed install prints a warning with the command to run yourself, and the rest carry on.
 When it's `false`, a switch runs `brew bundle` as usual.
-On a fresh Mac, start with `false`; after `av harden brew`, set it to `true` and run `./rebuild.sh`.
+On a fresh Mac, start with `false`: the first switch installs Automic Vault, which `av harden brew` needs.
+Then run `av harden brew` yourself, set it to `true` and run `./rebuild.sh`.
 `casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
-`/usr/local/bin` comes first in `PATH` so `brew` is Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
+`/usr/local/bin` comes first in `PATH` so `brew`, `av` and any tool Automic Vault hardens are Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
 
 **Hardened sudo:** `configuration.nix` turns on Touch ID for sudo, which is what Automic Vault's `av harden sudo` does.
 nix-darwin owns `/etc/pam.d/sudo_local`, so `av harden sudo` can't add its line there; instead every switch writes `auth sufficient pam_tid.so` into it, and Automic Vault reports sudo as hardened.
@@ -154,7 +161,7 @@ If you don't use it, just remove it from `brews` in your copy.
 ## Repo tour
 
 - `flake.nix` - the entry point.
-  Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine.
+  Wires up nixpkgs, nix-darwin, home-manager, nix-homebrew, and automic-vault-nix, and declares the `mac` machine.
 - `configuration.nix` - system-level config: macOS defaults, Touch ID for sudo, apps, Homebrew.
 - `home.nix` - user-level config: shell, packages, prompt, and the symlinks described below.
 - `rebuild.sh` - re-applies the config after the first switch, then runs `brew-sync` if Homebrew is hardened.

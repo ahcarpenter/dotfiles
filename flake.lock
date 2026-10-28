@@ -1,5 +1,28 @@
 {
   "nodes": {
+    "automic-vault": {
+      "inputs": {
+        "nix-darwin": [
+          "nix-darwin"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793160489,
+        "narHash": "sha256-V9gzfCDWNDP+CYT727hIfPKYyPEXIGZtp9R00vdSGrM=",
+        "owner": "ahcarpenter",
+        "repo": "automic-vault-nix",
+        "rev": "0674c84d22284467181152c7e976da2e068dd458",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ahcarpenter",
+        "repo": "automic-vault-nix",
+        "type": "github"
+      }
+    },
     "brew-src": {
       "flake": false,
       "locked": {
@@ -95,6 +118,7 @@
     },
     "root": {
       "inputs": {
+        "automic-vault": "automic-vault",
         "home-manager": "home-manager",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",

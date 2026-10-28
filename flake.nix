@@ -12,9 +12,13 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
+    automic-vault.url = "github:ahcarpenter/automic-vault-nix";
+    automic-vault.inputs.nixpkgs.follows = "nixpkgs";
+    automic-vault.inputs.nix-darwin.follows = "nix-darwin";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, automic-vault }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -26,6 +30,7 @@
         modules = [
           ./configuration.nix
           nix-homebrew.darwinModules.nix-homebrew
+          automic-vault.darwinModules.default
           home-manager.darwinModules.home-manager
           {
             home-manager.useGlobalPkgs = true;

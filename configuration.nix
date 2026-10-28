@@ -63,6 +63,12 @@ in
     ++ lib.optional (lib.meta.availableOn pkgs.stdenv.hostPlatform opensuperwhisper) opensuperwhisper
     ++ lib.optional hardenedHomebrew brewSync;
 
+  # Automic Vault has to live at /Applications/Automic Vault.app, with its av
+  # CLI at /usr/local/bin/av, so its module installs it there instead of
+  # systemPackages. It only ships for Apple Silicon.
+  programs.automic-vault.enable =
+    lib.meta.availableOn pkgs.stdenv.hostPlatform config.programs.automic-vault.package;
+
   nix-homebrew = {
     enable = true;
     # Hardened Homebrew belongs to Automic Vault's account, so nix-homebrew
