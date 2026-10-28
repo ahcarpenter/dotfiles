@@ -14,6 +14,7 @@ If you find a bug, please open a GitHub Issue using the bug report template.
 Running the switch builds:
 
 - System settings (dark mode, key repeat, dock, Finder, trackpad)
+- Touch ID for sudo, with the password as fallback
 - Apps from Nix (Ghostty, OpenSuperWhisper), copied into `/Applications/Nix Apps`
 - Homebrew CLI tools (formulae and command-line casks)
 - Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, gh)
@@ -124,6 +125,12 @@ On a fresh Mac, start with `false`; after `av harden brew`, set it to `true` and
 `casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
 `/usr/local/bin` comes first in `PATH` so `brew` is Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
 
+**Hardened sudo:** `configuration.nix` turns on Touch ID for sudo, which is what Automic Vault's `av harden sudo` does.
+nix-darwin owns `/etc/pam.d/sudo_local`, so `av harden sudo` can't add its line there; instead every switch writes `auth sufficient pam_tid.so` into it, and Automic Vault reports sudo as hardened.
+The switch also adds `pam_reattach` ahead of it, so Touch ID works inside herdr, tmux and other terminal multiplexers, whose servers run outside the login session Touch ID needs.
+Touch ID is `sufficient`, not `required`: when it can't be used (lid closed, over SSH), sudo asks for your password as before.
+To turn it off, set `touchIdAuth` and `reattach` under `security.pam.services.sudo_local` in `configuration.nix` to `false` and run `./rebuild.sh`.
+
 **Safe reruns:** a switch never removes Homebrew packages and never overwrites your Claude Code settings.
 `configuration.nix` sets `homebrew.onActivation.cleanup = "none"`, so Homebrew installs what's in `brews` and `casks` and leaves anything else you installed alone.
 `~/.claude/settings.json` is not linked into the repo: each switch adds only the keys from `home/.claude/settings.json` that it's missing (backing it up first), and your existing values always win.
@@ -148,7 +155,7 @@ If you don't use it, just remove it from `brews` in your copy.
 
 - `flake.nix` - the entry point.
   Wires up nixpkgs, nix-darwin, home-manager, and nix-homebrew, and declares the `mac` machine.
-- `configuration.nix` - system-level config: macOS defaults, apps, Homebrew.
+- `configuration.nix` - system-level config: macOS defaults, Touch ID for sudo, apps, Homebrew.
 - `home.nix` - user-level config: shell, packages, prompt, and the symlinks described below.
 - `rebuild.sh` - re-applies the config after the first switch, then runs `brew-sync` if Homebrew is hardened.
   Run this every time you make a change.
