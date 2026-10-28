@@ -69,6 +69,13 @@ in
   programs.automic-vault.enable =
     lib.meta.availableOn pkgs.stdenv.hostPlatform config.programs.automic-vault.package;
 
+  # With hardenedHomebrew set on a Mac without Automic Vault's account, stop
+  # before the switch changes anything, instead of failing partway at
+  # nix-homebrew's setup.
+  system.checks.text = lib.mkIf hardenedHomebrew ''
+    ${lib.getExe (pkgs.callPackage ./scripts/check-hardened.nix { })} ${lib.escapeShellArgs [ config.nix-homebrew.user config.nix-homebrew.group ]}
+  '';
+
   nix-homebrew = {
     enable = true;
     # Hardened Homebrew belongs to Automic Vault's account, so nix-homebrew

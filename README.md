@@ -124,6 +124,7 @@ If you don't use it, remove the `signing` block in your copy, or your commits wi
 **Hardened Homebrew:** once you run Automic Vault's `av harden brew`, its `brew` in `/usr/local/bin` is the only thing that may change Homebrew, and it refuses `brew bundle`.
 `hardenedHomebrew` in `configuration.nix` says whether that's done on this Mac.
 When it's `true`, nix-homebrew sets Homebrew up as Automic Vault's `automic` account and nix-darwin's `brew bundle` step is off.
+If this Mac has no `automic` user or `vault` group, which `av harden brew` creates, the switch stops before changing anything.
 After the switch, `rebuild.sh` runs `brew-sync` as you, which installs whatever is missing from `taps`, `brews` and `casks` one at a time through Automic Vault's `brew`, so each install waits for your approval in Automic Vault.
 A denied or failed install prints a warning with the command to run yourself, and the rest carry on.
 When it's `false`, a switch runs `brew bundle` as usual.
@@ -168,7 +169,7 @@ If you don't use it, just remove it from `brews` in your copy.
   Run this every time you make a change.
 - `home/` - the actual config files that get symlinked into place (except `home/.claude/settings.json`, which is merged in; see "Safe reruns"); the sections below explain the shared symlink model and Pi's narrower selective setup.
 - `pkgs/` - OpenSuperWhisper, which isn't in nixpkgs, packaged from its signed release.
-- `scripts/` - the Claude Code settings merge that runs on each switch, `brew-sync` for hardened Homebrew, and their tests (run by `nix flake check`).
+- `scripts/` - the Claude Code settings merge that runs on each switch, `brew-sync` and the switch's check for hardened Homebrew, and their tests (run by `nix flake check`).
 
 ## How the symlinks work
 

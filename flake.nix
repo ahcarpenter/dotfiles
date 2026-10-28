@@ -48,6 +48,7 @@
           pkgs = self.darwinConfigurations."mac".pkgs;
           merge = pkgs.callPackage ./scripts/merge-claude-settings.nix { };
           brewSync = pkgs.callPackage ./scripts/brew-sync.nix { };
+          checkHardened = pkgs.callPackage ./scripts/check-hardened.nix { };
         in
         {
           ${pkgs.stdenv.hostPlatform.system} = {
@@ -63,6 +64,14 @@
                 { nativeBuildInputs = [ pkgs.bash pkgs.coreutils pkgs.gnugrep ]; }
                 ''
                   bash ${./scripts/test-brew-sync.sh} ${pkgs.lib.getExe brewSync}
+                  touch $out
+                '';
+            # Runs Apple's dscl, which a sandboxed build cannot reach.
+            check-hardened =
+              pkgs.runCommand "test-check-hardened"
+                { nativeBuildInputs = [ pkgs.bash ]; __noChroot = true; }
+                ''
+                  bash ${./scripts/test-check-hardened.sh} ${pkgs.lib.getExe checkHardened}
                   touch $out
                 '';
           };
