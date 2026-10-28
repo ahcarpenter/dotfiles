@@ -18,7 +18,6 @@ in
     neovim
     gh
     fnm
-    pnpm
     # Nerd Font; Ghostty itself renders in Operator Mono SSm Lig (see README)
     nerd-fonts.hack
   ];
