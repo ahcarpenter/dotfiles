@@ -33,6 +33,7 @@ ln -s ../Cellar/tailscale-cli/1.0 "$prefix/opt/tailscale"
 items=(
   trusted-tap:rjyo/moshi trusted-tap:automic-vault/isotopes
   formula:herdr formula:tailscale formula:mosh formula:moshi-hook
+  formula:automic-vault/isotopes/gh-cli
   cask:claude-code@latest
 )
 
@@ -45,6 +46,7 @@ expected="trust --tap automic-vault/isotopes
 tap automic-vault/isotopes
 install --formula mosh
 install --formula moshi-hook
+install --formula automic-vault/isotopes/gh-cli
 install --cask claude-code@latest"
 [[ "$(cat "$work/calls")" == "$expected" ]] || fail "unexpected brew calls: $(cat "$work/calls")"
 grep -q "warning: 'brew install --formula mosh' was denied or failed" "$work/err" || fail "refused install gave no warning naming the command"
@@ -58,7 +60,7 @@ echo "trust --tap automic-vault/isotopes" >"$work/deny"
 
 # With everything installed, brew is never called.
 mkdir -p "$library/Taps/automic-vault/homebrew-isotopes" "$prefix/Cellar/mosh" \
-  "$prefix/Cellar/moshi-hook" "$prefix/Caskroom/claude-code@latest"
+  "$prefix/Cellar/moshi-hook" "$prefix/Cellar/gh-cli" "$prefix/Caskroom/claude-code@latest"
 rm -f "$work/calls" "$work/deny"
 "$sync" "$prefix" "$library" "$work/brew" "${items[@]}" 2>"$work/err" || fail "an up-to-date run did not exit 0"
 [[ ! -e "$work/calls" ]] || fail "brew was called with everything installed: $(cat "$work/calls")"
