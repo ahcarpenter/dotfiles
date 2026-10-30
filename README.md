@@ -17,7 +17,7 @@ Running the switch builds:
 - Touch ID for sudo, with the password as fallback
 - Apps from Nix (Ghostty, OpenSuperWhisper), copied into `/Applications/Nix Apps`
 - Homebrew CLI tools (formulae and command-line casks)
-- Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, gh)
+- Nix user packages (ripgrep, fd, fzf, jq, lazygit, Neovim, Hack Nerd Font, and plain gh on systems other than macOS)
 - Shell (zsh, aliases, starship prompt)
 - Editor (Neovim config with the rose-pine moon theme)
 - Terminal (Ghostty config with the Monokai Pro theme, the Operator Mono SSm Lig font with ligatures, and dimmed unfocused windows)
@@ -124,6 +124,12 @@ When it's `false`, a switch runs `brew bundle` as usual.
 On a fresh Mac, start with `false`; after `av harden brew`, set it to `true` and run `./rebuild.sh`.
 `casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
 `/usr/local/bin` comes first in `PATH` so `brew` is Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
+
+**Automic Vault's `gh`:** on macOS, `gh` is Automic Vault's signed build, `automic-vault/isotopes/gh-cli` in `brews`, because a token kept in Automic Vault can only be reached through that build.
+Other systems get plain `gh` from Nix.
+The build needs the running Automic Vault app to log in or to use a saved token.
+Installing it doesn't harden `gh`: run `av harden gh` yourself once Automic Vault is set up, to move any existing tokens into it and set up Git.
+Its completions and man pages come from plain `gh`, since the formula ships only the binary.
 
 **Hardened sudo:** `configuration.nix` turns on Touch ID for sudo, which is what Automic Vault's `av harden sudo` does.
 nix-darwin owns `/etc/pam.d/sudo_local`, so `av harden sudo` can't add its line there; instead every switch writes `auth sufficient pam_tid.so` into it, and Automic Vault reports sudo as hardened.
