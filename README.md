@@ -116,9 +116,10 @@ Every commit and tag is signed through [Automic Vault](https://github.com/automi
 The switch installs it from its Nix package, [automic-vault-nix](https://github.com/ahcarpenter/automic-vault-nix), not Homebrew, because its cask installs an app, which hardened Homebrew refuses.
 `programs.automic-vault.enable` in `configuration.nix` copies the app to `/Applications/Automic Vault.app`, where `signer` points, and installs its `av` CLI at `/usr/local/bin/av`, as the app's own "Install av CLI" does.
 An Automic Vault already there, for example one you installed by hand, has to be validly signed, or the switch stops before changing anything.
-The first switch replaces it only when it differs from the packaged version, and leaves an identical one alone.
-Replacing it needs your terminal allowed under System Settings > Privacy & Security > App Management.
-Every switch puts back the version pinned in `flake.lock`, so update it with `nix flake update automic-vault` and `./rebuild.sh` rather than the app's own updater, then quit and reopen Automic Vault.
+Automic Vault updates itself, so the version pinned in `flake.lock` is a minimum: a validly signed newer app or `av` stays, and the switch warns that the package is behind.
+Otherwise the switch replaces one that differs from the packaged version, and leaves an identical one alone.
+Replacing the app needs your terminal allowed under System Settings > Privacy & Security > App Management.
+To raise the minimum, run `nix flake update automic-vault` and `./rebuild.sh`, then quit and reopen Automic Vault if the app changed.
 If you don't use it, remove the `signing` block in your copy, or your commits will fail.
 
 **Hardened Homebrew:** once you run Automic Vault's `av harden brew`, its `brew` in `/usr/local/bin` is the only thing that may change Homebrew, and it refuses `brew bundle`.

@@ -10,11 +10,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793160489,
-        "narHash": "sha256-V9gzfCDWNDP+CYT727hIfPKYyPEXIGZtp9R00vdSGrM=",
+        "lastModified": 1793376555,
+        "narHash": "sha256-RSmxv3cdFj70cRe8WEZ5icOYJE79zQMPWNOUcXbB0Z8=",
         "owner": "ahcarpenter",
         "repo": "automic-vault-nix",
-        "rev": "0674c84d22284467181152c7e976da2e068dd458",
+        "rev": "d49e345fde8eec192cce0192972d47d578dfde18",
         "type": "github"
       },
       "original": {
