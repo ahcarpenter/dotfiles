@@ -80,6 +80,14 @@ in
   # Automic Vault's brew in /usr/local/bin has to come before Homebrew's own
   # and before nix-homebrew's launcher in the Nix profiles.
   environment.systemPath = lib.mkBefore [ "/usr/local/bin" "${brewPrefix}/bin" "${brewPrefix}/sbin" ];
+  # Home Manager installs into /etc/profiles/per-user, so ~/.nix-profile never
+  # exists. Left in PATH, it is a missing directory any process running as the
+  # user could create ahead of /usr/bin.
+  environment.profiles = lib.mkForce [
+    "/etc/profiles/per-user/$USER"
+    "/run/current-system/sw"
+    "/nix/var/nix/profiles/default"
+  ];
   environment.variables = {
     HOMEBREW_PREFIX = brewPrefix;
     HOMEBREW_CELLAR = "${brewPrefix}/Cellar";
