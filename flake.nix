@@ -12,9 +12,13 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
+    automic-vault.url = "github:ahcarpenter/automic-vault-nix";
+    automic-vault.inputs.nixpkgs.follows = "nixpkgs";
+    automic-vault.inputs.nix-darwin.follows = "nix-darwin";
   };
 
-  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs }:
+  outputs = inputs@{ self, nix-darwin, nix-homebrew, home-manager, nixpkgs, automic-vault }:
     let
       # The one username line to change if this isn't your machine.
       # bootstrap.sh offers to rewrite this for you if your macOS username differs.
@@ -26,6 +30,7 @@
         modules = [
           ./configuration.nix
           nix-homebrew.darwinModules.nix-homebrew
+          automic-vault.darwinModules.default
           home-manager.darwinModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
@@ -43,6 +48,7 @@
           pkgs = self.darwinConfigurations."mac".pkgs;
           merge = pkgs.callPackage ./scripts/merge-claude-settings.nix { };
           brewSync = pkgs.callPackage ./scripts/brew-sync.nix { };
+          checkHardened = pkgs.callPackage ./scripts/check-hardened.nix { };
         in
         {
           ${pkgs.stdenv.hostPlatform.system} = {
@@ -58,6 +64,14 @@
                 { nativeBuildInputs = [ pkgs.bash pkgs.coreutils pkgs.gnugrep ]; }
                 ''
                   bash ${./scripts/test-brew-sync.sh} ${pkgs.lib.getExe brewSync}
+                  touch $out
+                '';
+            # Runs Apple's dscl, which a sandboxed build cannot reach.
+            check-hardened =
+              pkgs.runCommand "test-check-hardened"
+                { nativeBuildInputs = [ pkgs.bash ]; __noChroot = true; }
+                ''
+                  bash ${./scripts/test-check-hardened.sh} ${pkgs.lib.getExe checkHardened}
                   touch $out
                 '';
           };
