@@ -2,6 +2,12 @@
 
 let
   dotfiles = "${config.home.homeDirectory}/.dotfiles";
+  # Automic Vault's gh, from Homebrew on macOS, ships only its binary, so its
+  # zsh completions and man pages are copied from plain gh, leaving plain gh out.
+  ghDocs = pkgs.runCommand "gh-docs" { } ''
+    mkdir $out
+    cp -r ${pkgs.gh}/share $out/share
+  '';
 in
 
 {
@@ -16,12 +22,11 @@ in
     jq        # json on the command line
     lazygit
     neovim
-    gh
     fnm
     pnpm
     # Nerd Font; Ghostty itself renders in Operator Mono SSm Lig (see README)
     nerd-fonts.hack
-  ];
+  ] ++ (if stdenv.isDarwin then [ ghDocs ] else [ gh ]);
   fonts.fontconfig.enable = true;
 
   home.sessionVariables = {

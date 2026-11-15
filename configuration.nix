@@ -102,6 +102,7 @@ in
       "tailscale"
       "mosh"
       "moshi-hook"
+      "automic-vault/isotopes/gh-cli"
     ];
     # Only command-line casks: hardened Homebrew refuses app casks.
     casks = [
