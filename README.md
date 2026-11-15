@@ -124,6 +124,7 @@ When it's `false`, a switch runs `brew bundle` as usual.
 On a fresh Mac, start with `false`; after `av harden brew`, set it to `true` and run `./rebuild.sh`.
 `casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
 `/usr/local/bin` comes first in `PATH` so `brew` is Automic Vault's, and Homebrew's zsh completions aren't loaded, since zsh refuses them once Automic Vault owns them.
+`~/.nix-profile` is left out of `PATH`: Home Manager installs into `/etc/profiles/per-user/$USER`, so it never exists, and any process running as you could create it ahead of `/usr/bin`.
 
 **Hardened sudo:** `configuration.nix` turns on Touch ID for sudo, which is what Automic Vault's `av harden sudo` does.
 nix-darwin owns `/etc/pam.d/sudo_local`, so `av harden sudo` can't add its line there; instead every switch writes `auth sufficient pam_tid.so` into it, and Automic Vault reports sudo as hardened.
