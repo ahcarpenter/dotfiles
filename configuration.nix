@@ -9,8 +9,9 @@ let
   # Installed by `av harden brew`; once it's there, it is the only brew that may change Homebrew.
   vaultBrew = "/usr/local/bin/brew";
   opensuperwhisper = pkgs.callPackage ./pkgs/opensuperwhisper.nix { };
-  # Installs what's missing from the Homebrew lists below through Automic
-  # Vault's brew. rebuild.sh runs it as you after the switch.
+  # Installs what's missing from the Homebrew lists below and upgrades what's
+  # outdated, through Automic Vault's brew. rebuild.sh runs it as you after the
+  # switch.
   brewSync = pkgs.writeShellScriptBin "brew-sync" ''
     exec ${lib.getExe (pkgs.callPackage ./scripts/brew-sync.nix { })} ${lib.escapeShellArgs (
       [ brewPrefix config.nix-homebrew.prefixes.${brewPrefix}.library vaultBrew ]
@@ -88,8 +89,8 @@ in
   };
 
   homebrew = {
-    # Hardened Homebrew refuses `brew bundle`, so there brew-sync installs
-    # these lists instead of nix-darwin's Homebrew step.
+    # Hardened Homebrew refuses `brew bundle`, so there brew-sync installs and
+    # upgrades these lists instead of nix-darwin's Homebrew step.
     enable = !hardenedHomebrew;
     onActivation.cleanup = "none";  # install what's listed, leave everything else alone
     onActivation.autoUpdate = true;
