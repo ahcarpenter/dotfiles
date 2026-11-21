@@ -118,8 +118,13 @@ If you don't use it, remove the `signing` block in your copy, or your commits wi
 **Hardened Homebrew:** once you run Automic Vault's `av harden brew`, its `brew` in `/usr/local/bin` is the only thing that may change Homebrew, and it refuses `brew bundle`.
 `hardenedHomebrew` in `configuration.nix` says whether that's done on this Mac.
 When it's `true`, nix-homebrew sets Homebrew up as Automic Vault's `automic` account and nix-darwin's `brew bundle` step is off.
-After the switch, `rebuild.sh` runs `brew-sync` as you, which installs whatever is missing from `taps`, `brews` and `casks` one at a time through Automic Vault's `brew`, so each install waits for your approval in Automic Vault.
-A denied or failed install prints a warning with the command to run yourself, and the rest carry on.
+After the switch, `rebuild.sh` runs `brew-sync` as you, which keeps `taps`, `brews` and `casks` installed and current through Automic Vault's `brew`.
+It refreshes Homebrew's package lists with one `brew update`, as `homebrew.onActivation.autoUpdate` does on an unhardened Mac, installs whatever is missing, then upgrades each listed formula and cask that `brew outdated` reports.
+Each install and upgrade is its own command, so each waits for your approval in Automic Vault.
+Whether `brew update` and `brew outdated` ask too depends on Homebrew's access level in Automic Vault: Read & Update runs them without asking, Approval Required asks for each.
+Nothing outside the lists is upgraded or removed, though upgrading a listed formula can also upgrade its dependencies.
+If an upgraded formula's Homebrew service is running in your login session (`sh.brew.<name>` or `homebrew.mxcl.<name>`), `brew-sync` restarts it, so it doesn't keep running the old version the upgrade removed.
+A denied or failed command prints a warning with the command to run yourself, and the rest carry on.
 When it's `false`, a switch runs `brew bundle` as usual.
 On a fresh Mac, start with `false`; after `av harden brew`, set it to `true` and run `./rebuild.sh`.
 `casks` can only hold command-line casks, since hardened Homebrew refuses app casks; apps come from Nix in `configuration.nix` instead.
@@ -150,7 +155,7 @@ If you don't use it, just remove it from `brews` in your copy.
 - `home/.claude/settings.json` makes the same high-agency choices for Claude Code: auto permission mode by default, no prompt before bypass-permissions mode, and the Fable model.
   Its `SessionStart` hooks run `gh-axi`, `chrome-devtools-axi` and `lavish-axi`, which this repo doesn't install.
   Its `env` turns off Claude Code's self-updater, so the `claude-code@latest` Homebrew cask is the only install, while plugin marketplaces still auto-update.
-  Nothing upgrades Claude Code automatically: it updates only when I run `/usr/local/bin/brew upgrade --cask claude-code@latest` myself, which goes through Automic Vault and asks for my approval.
+  Claude Code updates only through that cask: with hardened Homebrew, `./rebuild.sh` upgrades it when it's outdated (see "Hardened Homebrew"), or I run `/usr/local/bin/brew upgrade --cask claude-code@latest` myself, and either way Automic Vault asks for my approval.
   A switch only adds the keys your settings lack, so edit that file first if you don't want these.
 
 ## Repo tour
